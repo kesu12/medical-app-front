@@ -4,6 +4,8 @@ import './App.css';
 import Header from './components/Header';
 import Home from './pages/Home';
 import Doctors from './pages/Doctors';
+import Departments from './pages/Departments';
+import AdminUsers from './pages/AdminUsers';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import AuthModal from './components/AuthModal';
@@ -54,8 +56,14 @@ function AppInner() {
       return;
     }
 
-    // Открываем модальные окна только если пользователь НЕ залогинен
+    // Редиректим неавторизованных пользователей с защищенных страниц
     if (!loading && !user) {
+      const protectedRoutes = ['/doctors', '/departments', '/admin-users', '/profile', '/settings'];
+      if (protectedRoutes.includes(location.pathname)) {
+        navigate('/');
+        return;
+      }
+      
       if (location.pathname === '/login') {
         openLogin();
       } else if (location.pathname === '/register') {
@@ -91,6 +99,8 @@ function AppInner() {
         <Route path="/login" element={<Home />} />
         <Route path="/register" element={<Home />} />
         <Route path="/doctors" element={<Doctors />} />
+        <Route path="/departments" element={<Departments />} />
+        <Route path="/admin-users" element={<AdminUsers />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>

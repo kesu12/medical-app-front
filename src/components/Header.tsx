@@ -45,9 +45,15 @@ function Header({ onOpenLogin, onOpenRegister }: HeaderProps) {
         <Link to="/" className="app-header__logo-link" aria-label="Home">
           <img src={logo} alt="Medical App" className="app-header__logo" />
         </Link>
-        <nav className="app-header__nav">
-          <Link to="/doctors" className="btn btn--ghost">Doctors</Link>
-        </nav>
+        {user && (
+          <nav className="app-header__nav">
+            <Link to="/doctors" className="btn btn--ghost">Doctors</Link>
+            <Link to="/departments" className="btn btn--ghost">Departments</Link>
+            {user.role === 'ADMIN' && (
+              <Link to="/admin-users" className="btn btn--ghost">Users (A)</Link>
+            )}
+          </nav>
+        )}
       </div>
       <div className="app-header__actions">
         {user ? (
