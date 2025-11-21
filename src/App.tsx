@@ -1,25 +1,103 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
+import Header from './components/Header';
+import Home from './pages/Home';
+import Doctors from './pages/Doctors';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings';
+import AuthModal from './components/AuthModal';
+import { UserProvider, useUser } from './contexts/UserContext';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      <UserProvider>
+        <BrowserRouter>
+          <AppInner />
+        </BrowserRouter>
+      </UserProvider>
     </div>
+  );
+}
+
+function AppInner() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { refreshUser, user, loading } = useUser();
+  const [authType, setAuthType] = useState<null | 'login' | 'register'>(null);
+
+  function openLogin() {
+    // Не открываем логин, если пользователь уже залогинен
+    if (user) {
+      return;
+    }
+    setAuthType('login');
+  }
+
+  function openRegister() {
+    // Не открываем регистрацию, если пользователь уже залогинен
+    if (user) {
+      return;
+    }
+    setAuthType('register');
+  }
+
+  function closeAuth() {
+    setAuthType(null);
+  }
+
+  useEffect(() => {
+    // Если пользователь залогинен и пытается зайти на страницы логина/регистрации - редиректим
+    if (!loading && user && (location.pathname === '/login' || location.pathname === '/register')) {
+      navigate('/');
+      return;
+    }
+
+    // Открываем модальные окна только если пользователь НЕ залогинен
+    if (!loading && !user) {
+      if (location.pathname === '/login') {
+        openLogin();
+      } else if (location.pathname === '/register') {
+        openRegister();
+      } else if (location.pathname !== '/login' && location.pathname !== '/register') {
+        // ensure modal closed on other routes
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (authType) {
+          closeAuth();
+        }
+      }
+    } else if (!loading && user) {
+      // Если пользователь залогинен, закрываем любые открытые модальные окна
+      if (authType) {
+        closeAuth();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, user, loading]);
+
+  function handleCloseAuth() {
+    closeAuth();
+    if (location.pathname === '/login' || location.pathname === '/register') {
+      navigate('/');
+    }
+  }
+
+  return (
+    <>
+      <Header onOpenLogin={openLogin} onOpenRegister={openRegister} />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Home />} />
+        <Route path="/register" element={<Home />} />
+        <Route path="/doctors" element={<Doctors />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
+      </Routes>
+      {authType && !user && (
+        <AuthModal open={!!authType} type={authType} onClose={handleCloseAuth} onSuccess={refreshUser} />
+      )}
+    </>
   );
 }
 
