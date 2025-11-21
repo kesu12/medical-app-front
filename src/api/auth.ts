@@ -40,7 +40,21 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
       throw new Error(text || `Request failed: ${res.status}`);
     }
   }
-  return res.json();
+
+  if (res.status === 204) {
+    return undefined as T;
+  }
+
+  const responseText = await res.text();
+  if (!responseText) {
+    return undefined as T;
+  }
+
+  try {
+    return JSON.parse(responseText);
+  } catch {
+    return responseText as unknown as T;
+  }
 }
 
 export async function login(username: string, password: string): Promise<AuthResponse> {
@@ -111,6 +125,11 @@ export type User = {
   avatarUrl?: string;
   phoneNumber?: string;
   role: UserRole;
+  department?: {
+    id?: number;
+    departmentId?: number;
+    name: string;
+  };
   confirmed?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -156,5 +175,19 @@ export async function updateProfile(input: ProfileUpdateInput): Promise<User> {
     body: JSON.stringify(input)
   });
   return data;
+}
+
+export type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
+export async function changePassword(input: ChangePasswordInput): Promise<void> {
+  await request<void>('/api/auth/change-password', {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: JSON.stringify(input)
+  });
 }
 

@@ -8,14 +8,14 @@ import {
   deleteUser,
   changeUserRole,
   confirmUser,
-  activateUser,
-  deactivateUser,
+  changeDoctorDepartment,
   AdminUser,
   UserRole
 } from '../api/adminUsers';
-import { getAllDepartments } from '../api/departments';
+import { getAllDepartments, Department as DepartmentType } from '../api/departments';
 import UserEditModal from '../components/UserEditModal';
 import UserDeleteModal from '../components/UserDeleteModal';
+import BulkUserOperations from '../components/BulkUserOperations';
 import '../App.css';
 
 function AdminUsers() {
@@ -24,6 +24,7 @@ function AdminUsers() {
   
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<AdminUser[]>([]);
+  const [departments, setDepartments] = useState<DepartmentType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -38,6 +39,10 @@ function AdminUsers() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [bulkOperationsOpen, setBulkOperationsOpen] = useState(false);
+  
+  // Selection
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set());
 
   const isAdmin = user?.role === 'ADMIN';
 
@@ -49,33 +54,37 @@ function AdminUsers() {
   }, [user, userLoading, isAdmin, navigate]);
 
   useEffect(() => {
-    async function loadUsers() {
+    async function loadData() {
       if (!isAdmin) return;
       
       setLoading(true);
       setError(null);
       
       try {
-        let data: AdminUser[];
+        const [usersData, departmentsData] = await Promise.all([
+          (async () => {
+            if (filterStartDate && filterEndDate) {
+              return await getUsersByCreatedDate(filterStartDate, filterEndDate);
+            } else if (filterRole) {
+              return await getUsersByRole(filterRole as UserRole);
+            } else {
+              return await getAllUsers();
+            }
+          })(),
+          getAllDepartments()
+        ]);
         
-        if (filterStartDate && filterEndDate) {
-          data = await getUsersByCreatedDate(filterStartDate, filterEndDate);
-        } else if (filterRole) {
-          data = await getUsersByRole(filterRole as UserRole);
-        } else {
-          data = await getAllUsers();
-        }
-        
-        setUsers(data);
+        setUsers(usersData);
+        setDepartments(departmentsData);
       } catch (err: any) {
-        setError(err?.message || 'Failed to load users');
+        setError(err?.message || 'Failed to load data');
       } finally {
         setLoading(false);
       }
     }
     
     if (isAdmin) {
-      loadUsers();
+      loadData();
     }
   }, [isAdmin, filterRole, filterStartDate, filterEndDate]);
 
@@ -137,38 +146,25 @@ function AdminUsers() {
     }
   }
 
-  async function handleActivate(userId: number) {
-    try {
-      await activateUser(userId);
-      await reloadUsers();
-    } catch (err: any) {
-      setError(err?.message || 'Failed to activate user');
-    }
-  }
-
-  async function handleDeactivate(userId: number) {
-    try {
-      await deactivateUser(userId);
-      await reloadUsers();
-    } catch (err: any) {
-      setError(err?.message || 'Failed to deactivate user');
-    }
-  }
-
   async function reloadUsers() {
     setLoading(true);
     try {
-      let data: AdminUser[];
-      if (filterStartDate && filterEndDate) {
-        data = await getUsersByCreatedDate(filterStartDate, filterEndDate);
-      } else if (filterRole) {
-        data = await getUsersByRole(filterRole as UserRole);
-      } else {
-        data = await getAllUsers();
-      }
-      setUsers(data);
+      const [usersData, departmentsData] = await Promise.all([
+        (async () => {
+          if (filterStartDate && filterEndDate) {
+            return await getUsersByCreatedDate(filterStartDate, filterEndDate);
+          } else if (filterRole) {
+            return await getUsersByRole(filterRole as UserRole);
+          } else {
+            return await getAllUsers();
+          }
+        })(),
+        getAllDepartments()
+      ]);
+      setUsers(usersData);
+      setDepartments(departmentsData);
     } catch (err: any) {
-      setError(err?.message || 'Failed to reload users');
+      setError(err?.message || 'Failed to reload data');
     } finally {
       setLoading(false);
     }
@@ -182,6 +178,28 @@ function AdminUsers() {
   function formatDate(dateString?: string): string {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
+  }
+
+  function toggleUserSelection(userId: number) {
+    const newSelection = new Set(selectedUserIds);
+    if (newSelection.has(userId)) {
+      newSelection.delete(userId);
+    } else {
+      newSelection.add(userId);
+    }
+    setSelectedUserIds(newSelection);
+  }
+
+  function toggleSelectAll() {
+    if (selectedUserIds.size === filteredUsers.length) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(filteredUsers.map(u => u.userId)));
+    }
+  }
+
+  function getSelectedUsers(): AdminUser[] {
+    return filteredUsers.filter(u => selectedUserIds.has(u.userId));
   }
 
   if (userLoading || loading) {
@@ -273,14 +291,25 @@ function AdminUsers() {
           </div>
         </div>
 
-        {/* Results count */}
-        <div className="admin-users__results-count">
-          {filteredUsers.length === 0 ? (
-            <p>No users found</p>
-          ) : (
-            <p>
-              {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} found
-            </p>
+        {/* Results count and bulk actions */}
+        <div className="admin-users__results-count" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            {filteredUsers.length === 0 ? (
+              <p>No users found</p>
+            ) : (
+              <p>
+                {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} found
+                {selectedUserIds.size > 0 && ` (${selectedUserIds.size} selected)`}
+              </p>
+            )}
+          </div>
+          {selectedUserIds.size > 0 && (
+            <button
+              className="btn btn--primary"
+              onClick={() => setBulkOperationsOpen(true)}
+            >
+              Bulk Operations ({selectedUserIds.size})
+            </button>
           )}
         </div>
 
@@ -289,13 +318,19 @@ function AdminUsers() {
           <table className="admin-users__table">
             <thead>
               <tr>
+                <th>
+                  <input
+                    type="checkbox"
+                    checked={selectedUserIds.size === filteredUsers.length && filteredUsers.length > 0}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
                 <th>ID</th>
                 <th>Name</th>
                 <th>Username</th>
                 <th>Email</th>
                 <th>Role</th>
                 <th>Department</th>
-                <th>Status</th>
                 <th>Created</th>
                 <th>Actions</th>
               </tr>
@@ -303,6 +338,13 @@ function AdminUsers() {
             <tbody>
               {filteredUsers.map(u => (
                 <tr key={u.userId}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedUserIds.has(u.userId)}
+                      onChange={() => toggleUserSelection(u.userId)}
+                    />
+                  </td>
                   <td>{u.userId}</td>
                   <td>{getUserFullName(u)}</td>
                   <td>@{u.username}</td>
@@ -320,12 +362,35 @@ function AdminUsers() {
                       <option value="DEFAULT">Default</option>
                     </select>
                   </td>
-                  <td>{u.department?.name || 'N/A'}</td>
                   <td>
-                    {u.confirmed ? (
-                      <span className="admin-users__status admin-users__status--confirmed">Confirmed</span>
+                    {u.role === 'DOCTOR' ? (
+                      <select
+                        className="form__input admin-users__department-select"
+                        value={u.department?.id || u.department?.departmentId || ''}
+                        onChange={async (e) => {
+                          const deptId = e.target.value ? parseInt(e.target.value) : null;
+                          if (deptId && u.department?.id !== deptId && u.department?.departmentId !== deptId) {
+                            try {
+                              await changeDoctorDepartment(u.userId, deptId);
+                              await reloadUsers();
+                            } catch (err: any) {
+                              setError(err?.message || 'Failed to change department');
+                            }
+                          }
+                        }}
+                      >
+                        <option value="">No Department</option>
+                        {departments.map(dept => {
+                          const deptId = dept.id || dept.departmentId;
+                          return (
+                            <option key={deptId} value={deptId}>
+                              {dept.name}
+                            </option>
+                          );
+                        })}
+                      </select>
                     ) : (
-                      <span className="admin-users__status admin-users__status--unconfirmed">Unconfirmed</span>
+                      u.department?.name || 'N/A'
                     )}
                   </td>
                   <td>{formatDate(u.createdAt)}</td>
@@ -346,21 +411,6 @@ function AdminUsers() {
                           onClick={() => handleConfirm(u.userId)}
                         >
                           Confirm
-                        </button>
-                      )}
-                      {u.confirmed ? (
-                        <button
-                          className="btn btn--ghost"
-                          onClick={() => handleDeactivate(u.userId)}
-                        >
-                          Deactivate
-                        </button>
-                      ) : (
-                        <button
-                          className="btn btn--ghost"
-                          onClick={() => handleActivate(u.userId)}
-                        >
-                          Activate
                         </button>
                       )}
                       <button
@@ -399,6 +449,17 @@ function AdminUsers() {
           }}
           onConfirm={selectedUser ? () => handleDelete(selectedUser) : undefined}
         />
+
+        {bulkOperationsOpen && (
+          <BulkUserOperations
+            selectedUsers={getSelectedUsers()}
+            onSuccess={() => {
+              reloadUsers();
+              setSelectedUserIds(new Set());
+            }}
+            onClose={() => setBulkOperationsOpen(false)}
+          />
+        )}
       </div>
     </div>
   );

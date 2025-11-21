@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
+import AvatarEditModal from './AvatarEditModal';
 import '../App.css';
 import { AdminUser, UserRole, updateUserAdmin } from '../api/adminUsers';
 import { getAllDepartments, Department } from '../api/departments';
@@ -12,12 +13,23 @@ type UserEditModalProps = {
 };
 
 function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
+  // Profile fields
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  
+  // Role and department
   const [role, setRole] = useState<UserRole>('DEFAULT');
   const [departmentId, setDepartmentId] = useState<number | undefined>();
   const [isConfirmed, setIsConfirmed] = useState(false);
+  
   const [departments, setDepartments] = useState<Department[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [avatarEditOpen, setAvatarEditOpen] = useState(false);
 
   useEffect(() => {
     async function loadDepartments() {
@@ -36,6 +48,12 @@ function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
 
   useEffect(() => {
     if (user) {
+      setFirstName(user.firstName || '');
+      setLastName(user.lastName || '');
+      setMiddleName(user.middleName || '');
+      setEmail(user.email || '');
+      setPhoneNumber(user.phoneNumber || '');
+      setAvatarUrl(user.avatarUrl || '');
       setRole(user.role);
       setDepartmentId(user.department?.id || user.department?.departmentId);
       setIsConfirmed(user.confirmed || false);
@@ -51,10 +69,18 @@ function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
     setSubmitting(true);
 
     try {
+      // Always send current confirmed status to preserve it when only changing department
+      const currentConfirmed = user.confirmed || false;
       await updateUserAdmin(user.userId, {
+        firstName: firstName.trim() || undefined,
+        lastName: lastName.trim() || undefined,
+        middleName: middleName.trim() || undefined,
+        email: email.trim() || undefined,
+        phoneNumber: phoneNumber.trim() || undefined,
+        avatarUrl: avatarUrl.trim() || undefined,
         role,
         departmentId,
-        isConfirmed
+        isConfirmed: currentConfirmed // Preserve current status
       });
       onSuccess();
       onClose();
@@ -68,6 +94,84 @@ function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
   return (
     <Modal open={open} title="Edit User" onClose={onClose}>
       <form className="form" onSubmit={handleSubmit}>
+        <div className="form__row form__row--two-columns">
+          <label className="form__field">
+            <span className="form__label">First Name</span>
+            <input
+              type="text"
+              className="form__input"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Enter first name..."
+            />
+          </label>
+
+          <label className="form__field">
+            <span className="form__label">Last Name</span>
+            <input
+              type="text"
+              className="form__input"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Enter last name..."
+            />
+          </label>
+        </div>
+
+        <label className="form__field">
+          <span className="form__label">Middle Name</span>
+          <input
+            type="text"
+            className="form__input"
+            value={middleName}
+            onChange={(e) => setMiddleName(e.target.value)}
+            placeholder="Enter middle name..."
+          />
+        </label>
+
+        <label className="form__field">
+          <span className="form__label">Email *</span>
+          <input
+            type="email"
+            className="form__input"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="Enter email..."
+          />
+        </label>
+
+        <label className="form__field">
+          <span className="form__label">Phone Number</span>
+          <input
+            type="tel"
+            className="form__input"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="Enter phone number..."
+          />
+        </label>
+
+        <div className="form__field">
+          <span className="form__label">Avatar</span>
+          <div className="user-edit__avatar-section">
+            <div className="user-edit__avatar-wrapper">
+              <img
+                src={avatarUrl || '/avatar.png'}
+                alt="Avatar"
+                className="user-edit__avatar"
+              />
+              <button
+                type="button"
+                className="user-edit__avatar-btn"
+                onClick={() => setAvatarEditOpen(true)}
+              >
+                Change Avatar
+              </button>
+            </div>
+          </div>
+        </div>
+
         <label className="form__field">
           <span className="form__label">Role *</span>
           <select
@@ -103,16 +207,7 @@ function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
           </select>
         </label>
 
-        <label className="form__field">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input
-              type="checkbox"
-              checked={isConfirmed}
-              onChange={(e) => setIsConfirmed(e.target.checked)}
-            />
-            <span className="form__label">Confirmed</span>
-          </div>
-        </label>
+        {/* Confirmed status is hidden - it's for email confirmation (future feature) */}
 
         {error && <div className="form__error">{error}</div>}
         <div className="form__actions">
@@ -124,9 +219,18 @@ function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
           </button>
         </div>
       </form>
+      
+      <AvatarEditModal
+        open={avatarEditOpen}
+        onClose={() => setAvatarEditOpen(false)}
+        onSave={(newAvatarUrl) => {
+          setAvatarUrl(newAvatarUrl);
+          setAvatarEditOpen(false);
+        }}
+        currentAvatarUrl={avatarUrl}
+      />
     </Modal>
   );
 }
 
 export default UserEditModal;
-

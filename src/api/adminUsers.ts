@@ -26,6 +26,12 @@ export type UserAdminUpdateInput = {
   isConfirmed: boolean;
   role: UserRole;
   notes?: string;
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  email?: string;
+  phoneNumber?: string;
+  avatarUrl?: string;
 };
 
 export type ConfirmUserInput = {
@@ -207,6 +213,33 @@ export async function changeDoctorDepartment(doctorId: number, departmentId: num
     method: 'PATCH',
     headers: getAuthHeader(),
     body: JSON.stringify({ departmentId })
+  });
+  return data;
+}
+
+// Bulk update users
+export type BulkUserUpdateDto = {
+  userIds: number[];
+  departmentId?: number;
+  role?: UserRole;
+  isConfirmed?: boolean;
+};
+
+export async function bulkUpdateUsers(bulkUpdate: BulkUserUpdateDto): Promise<AdminUser[]> {
+  const data = await request<AdminUser[]>('/api/admin/users/bulk-update', {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: JSON.stringify(bulkUpdate)
+  });
+  return data;
+}
+
+// Bulk confirm users
+export async function bulkConfirmUsers(userIds: number[]): Promise<number> {
+  const data = await request<number>('/api/admin/users/bulk-confirm', {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: JSON.stringify(userIds)
   });
   return data;
 }

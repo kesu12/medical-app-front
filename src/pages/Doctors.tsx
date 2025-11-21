@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
-import { getAllDoctors, getDoctorsByDepartment, extractDepartmentsFromDoctors, Doctor, Department } from '../api/doctors';
+import { getAllDoctors, getDoctorsByDepartment, Doctor } from '../api/doctors';
+import { getAllDepartments, Department } from '../api/departments';
 import '../App.css';
 
 function Doctors() {
@@ -26,7 +27,25 @@ function Doctors() {
   }, [user, userLoading, navigate]);
 
   useEffect(() => {
-    async function loadData() {
+    async function loadDepartments() {
+      if (!user) return;
+      
+      try {
+        const departmentsData = await getAllDepartments();
+        setDepartments(departmentsData);
+      } catch (err: any) {
+        console.error('Failed to load departments:', err);
+        // Don't set error here, just log it
+      }
+    }
+    
+    if (user) {
+      loadDepartments();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    async function loadDoctors() {
       if (!user) return;
       
       setLoading(true);
@@ -34,11 +53,8 @@ function Doctors() {
       
       try {
         const doctorsData = await getAllDoctors();
-        const departmentsData = extractDepartmentsFromDoctors(doctorsData);
-        
         setDoctors(doctorsData);
         setFilteredDoctors(doctorsData);
-        setDepartments(departmentsData);
       } catch (err: any) {
         setError(err?.message || 'Failed to load doctors');
       } finally {
@@ -47,7 +63,7 @@ function Doctors() {
     }
     
     if (user) {
-      loadData();
+      loadDoctors();
     }
   }, [user]);
 
@@ -56,9 +72,10 @@ function Doctors() {
 
     // Filter by department
     if (selectedDepartment !== null) {
-      filtered = filtered.filter(doctor => 
-        doctor.department?.departmentId === selectedDepartment
-      );
+      filtered = filtered.filter(doctor => {
+        const deptId = doctor.department?.departmentId || doctor.department?.id;
+        return deptId === selectedDepartment;
+      });
     }
 
     // Filter by search query
@@ -81,6 +98,11 @@ function Doctors() {
   }, [doctors, searchQuery, selectedDepartment]);
 
   async function handleDepartmentChange(departmentId: number | null) {
+    // Validate departmentId - ensure it's not NaN or invalid
+    if (departmentId !== null && (isNaN(departmentId) || departmentId <= 0)) {
+      departmentId = null;
+    }
+    
     setSelectedDepartment(departmentId);
     setLoading(true);
     
@@ -92,9 +114,7 @@ function Doctors() {
         doctorsData = await getDoctorsByDepartment(departmentId);
       }
       setDoctors(doctorsData);
-      // Update departments list from new doctors data
-      const departmentsData = extractDepartmentsFromDoctors(doctorsData);
-      setDepartments(departmentsData);
+      // Don't update departments - keep the full list loaded separately
     } catch (err: any) {
       setError(err?.message || 'Failed to load doctors');
     } finally {
@@ -148,15 +168,32 @@ function Doctors() {
                 value={selectedDepartment || ''}
                 onChange={(e) => {
                   const value = e.target.value;
-                  handleDepartmentChange(value === '' ? null : parseInt(value));
+                  if (value === '') {
+                    handleDepartmentChange(null);
+                  } else {
+                    const deptId = parseInt(value, 10);
+                    if (!isNaN(deptId) && deptId > 0) {
+                      handleDepartmentChange(deptId);
+                    } else {
+                      handleDepartmentChange(null);
+                    }
+                  }
                 }}
               >
                 <option value="">All Departments</option>
-                {departments.map(dept => (
-                  <option key={dept.departmentId} value={dept.departmentId}>
-                    {dept.name}
-                  </option>
-                ))}
+                {departments
+                  .filter(dept => {
+                    const deptId = dept.departmentId ?? dept.id;
+                    return deptId != null && !isNaN(Number(deptId));
+                  })
+                  .map(dept => {
+                    const deptId = dept.departmentId ?? dept.id;
+                    return (
+                      <option key={deptId} value={deptId}>
+                        {dept.name}
+                      </option>
+                    );
+                  })}
               </select>
             </label>
           </div>

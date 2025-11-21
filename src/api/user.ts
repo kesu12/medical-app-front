@@ -2,14 +2,7 @@ import { getAuthHeader } from './auth';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
-export type Department = {
-  id?: number;
-  departmentId?: number;
-  name: string;
-  description?: string;
-};
-
-export type Doctor = {
+export type UserInfo = {
   userId: number;
   username: string;
   email: string;
@@ -19,8 +12,18 @@ export type Doctor = {
   avatarUrl?: string;
   phoneNumber?: string;
   role: string;
-  department?: Department;
+  department?: {
+    id?: number;
+    departmentId?: number;
+    name: string;
+  };
   confirmed?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type UserPasswordUpdate = {
+  password: string;
 };
 
 async function request<T>(path: string, options: RequestInit): Promise<T> {
@@ -57,38 +60,21 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
   return res.json();
 }
 
-export async function getAllDoctors(): Promise<Doctor[]> {
-  const data = await request<Doctor[]>('/api/assignments/all-doctors', {
+// Get user by ID
+export async function getUserById(userId: number): Promise<UserInfo> {
+  const data = await request<UserInfo>(`/api/user/${userId}`, {
     method: 'GET',
     headers: getAuthHeader()
   });
   return data;
 }
 
-export async function getDoctorsByDepartment(departmentId: number): Promise<Doctor[]> {
-  const data = await request<Doctor[]>(`/api/assignments/doctors-by-department/${departmentId}`, {
-    method: 'GET',
-    headers: getAuthHeader()
+// Update user password
+export async function updateUserPassword(userId: number, password: string): Promise<UserInfo> {
+  const data = await request<UserInfo>(`/api/user/${userId}/password`, {
+    method: 'PUT',
+    headers: getAuthHeader(),
+    body: JSON.stringify({ password })
   });
   return data;
 }
-
-// Note: We extract departments from doctors list instead of calling admin endpoint
-// since /api/admin/department/all requires ADMIN role
-export function extractDepartmentsFromDoctors(doctors: Doctor[]): Department[] {
-  const departmentMap = new Map<number, Department>();
-  
-  doctors.forEach(doctor => {
-    if (doctor.department) {
-      const deptId = doctor.department.departmentId ?? doctor.department.id;
-      if (deptId != null && !departmentMap.has(deptId)) {
-        departmentMap.set(deptId, doctor.department);
-      }
-    }
-  });
-  
-  return Array.from(departmentMap.values()).sort((a, b) => 
-    a.name.localeCompare(b.name)
-  );
-}
-

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import logo from '../logo.svg';
 import '../App.css';
 import { useUser } from '../contexts/UserContext';
+import NotificationBell from './NotificationBell';
 
 type HeaderProps = {
   onOpenLogin: () => void;
@@ -46,50 +47,60 @@ function Header({ onOpenLogin, onOpenRegister }: HeaderProps) {
           <img src={logo} alt="Medical App" className="app-header__logo" />
         </Link>
         {user && (
-          <nav className="app-header__nav">
-            <Link to="/doctors" className="btn btn--ghost">Doctors</Link>
+        <nav className="app-header__nav">
+          <Link to="/doctors" className="btn btn--ghost">Doctors</Link>
             <Link to="/departments" className="btn btn--ghost">Departments</Link>
             {user.role === 'ADMIN' && (
               <Link to="/admin-users" className="btn btn--ghost">Users (A)</Link>
             )}
-          </nav>
+            {user.role === 'NURSE' && (
+              <Link to="/nurse-cabinet" className="btn btn--ghost">Nurse Cabinet</Link>
+            )}
+            <Link to="/medical-indicators" className="btn btn--ghost">Indicators</Link>
+        </nav>
         )}
       </div>
       <div className="app-header__actions">
         {user ? (
-          <div className="app-header__user-menu" ref={dropdownRef}>
-            <button
-              className="app-header__avatar-btn"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              aria-label="User menu"
-            >
-              <img src={avatarSrc} alt="Avatar" className="app-header__avatar" />
-            </button>
-            {dropdownOpen && (
-              <div className="app-header__dropdown">
-                <Link
-                  to="/profile"
-                  className="app-header__dropdown-item"
-                  onClick={() => setDropdownOpen(false)}
-                >
-                  Profile
-                </Link>
-                <Link
-                  to="/settings"
-                  className="app-header__dropdown-item"
-                  onClick={() => setDropdownOpen(false)}
-                >
-                  Settings
-                </Link>
-                <button
-                  className="app-header__dropdown-item app-header__dropdown-item--danger"
-                  onClick={handleLogout}
-                >
-                  Log Out
-                </button>
-              </div>
+          <>
+            {(user.role === 'PATIENT' || user.role === 'DOCTOR' || user.role === 'NURSE') && (
+              <Link to="/cabinet" className="btn btn--ghost">Cabinet</Link>
             )}
-          </div>
+            <NotificationBell />
+            <div className="app-header__user-menu" ref={dropdownRef}>
+              <button
+                className="app-header__avatar-btn"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                aria-label="User menu"
+              >
+                <img src={avatarSrc} alt="Avatar" className="app-header__avatar" />
+              </button>
+              {dropdownOpen && (
+                <div className="app-header__dropdown">
+                  <Link
+                    to="/profile"
+                    className="app-header__dropdown-item"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    to="/settings"
+                    className="app-header__dropdown-item"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Settings
+                  </Link>
+                  <button
+                    className="app-header__dropdown-item app-header__dropdown-item--danger"
+                    onClick={handleLogout}
+                  >
+                    Log Out
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         ) : (
           <>
             <button className="btn btn--ghost" onClick={onOpenLogin}>Login</button>
