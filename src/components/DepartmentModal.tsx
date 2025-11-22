@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import '../App.css';
 import { Department, createDepartment, updateDepartment, deleteDepartment } from '../api/departments';
+import { useLanguage } from '../contexts/LanguageContext';
 
 type DepartmentModalProps = {
   open: boolean;
@@ -12,6 +13,7 @@ type DepartmentModalProps = {
 };
 
 function DepartmentModal({ open, mode, department, onClose, onSuccess }: DepartmentModalProps) {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -55,56 +57,56 @@ function DepartmentModal({ open, mode, department, onClose, onSuccess }: Departm
   }
 
   const title = mode === 'create' 
-    ? 'Create Department' 
+    ? t('departmentModal.createDepartment')
     : mode === 'update' 
-    ? 'Update Department' 
-    : 'Delete Department';
+    ? t('departmentModal.updateDepartment')
+    : t('departmentModal.deleteDepartment');
 
   return (
     <Modal open={open} title={title} onClose={onClose}>
       {mode === 'delete' ? (
         <form className="form" onSubmit={handleSubmit}>
-          <p>Are you sure you want to delete the department "{department?.name}"? This action cannot be undone.</p>
+          <p>{t('departmentModal.deleteConfirm')} "{department?.name}"? {t('departmentModal.cannotUndo')}</p>
           {error && <div className="form__error">{error}</div>}
           <div className="form__actions">
             <button type="button" className="btn btn--ghost" onClick={onClose} disabled={submitting}>
-              Cancel
+              {t('modal.cancel')}
             </button>
             <button type="submit" className="btn btn--danger" disabled={submitting}>
-              {submitting ? 'Deleting...' : 'Delete'}
+              {submitting ? t('departmentModal.deleting') : t('common.delete')}
             </button>
           </div>
         </form>
       ) : (
         <form className="form" onSubmit={handleSubmit}>
           <label className="form__field">
-            <span className="form__label">Name *</span>
+            <span className="form__label">{t('departmentModal.nameRequired')}</span>
             <input
               type="text"
               className="form__input"
               value={name}
               onChange={e => setName(e.target.value)}
               required
-              placeholder="Enter department name..."
+              placeholder={t('departmentModal.enterName')}
             />
           </label>
           <label className="form__field">
-            <span className="form__label">Description</span>
+            <span className="form__label">{t('departments.description')}</span>
             <textarea
               className="form__input"
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Enter department description..."
+              placeholder={t('departmentModal.enterDescription')}
               rows={4}
             />
           </label>
           {error && <div className="form__error">{error}</div>}
           <div className="form__actions">
             <button type="button" className="btn btn--ghost" onClick={onClose} disabled={submitting}>
-              Cancel
+              {t('modal.cancel')}
             </button>
             <button type="submit" className="btn btn--primary" disabled={submitting}>
-              {submitting ? 'Saving...' : mode === 'create' ? 'Create' : 'Update'}
+              {submitting ? t('profile.saving') : mode === 'create' ? t('common.create') : t('common.update')}
             </button>
           </div>
         </form>

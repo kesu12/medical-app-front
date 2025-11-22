@@ -13,15 +13,18 @@ import NurseCabinet from './pages/NurseCabinet';
 import MedicalIndicators from './pages/MedicalIndicators';
 import AuthModal from './components/AuthModal';
 import { UserProvider, useUser } from './contexts/UserContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 function App() {
   return (
     <div className="app">
-      <UserProvider>
-        <BrowserRouter>
-          <AppInner />
-        </BrowserRouter>
-      </UserProvider>
+      <LanguageProvider>
+        <UserProvider>
+          <BrowserRouter>
+            <AppInner />
+          </BrowserRouter>
+        </UserProvider>
+      </LanguageProvider>
     </div>
   );
 }

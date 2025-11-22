@@ -2,6 +2,7 @@ import React from 'react';
 import Modal from './Modal';
 import '../App.css';
 import { AdminUser } from '../api/adminUsers';
+import { useLanguage } from '../contexts/LanguageContext';
 
 type UserDeleteModalProps = {
   open: boolean;
@@ -11,13 +12,15 @@ type UserDeleteModalProps = {
 };
 
 function UserDeleteModal({ open, user, onClose, onConfirm }: UserDeleteModalProps) {
+  const { t } = useLanguage();
+  
   function getUserFullName(user: AdminUser): string {
     const parts = [user.firstName, user.middleName, user.lastName].filter(Boolean);
     return parts.length > 0 ? parts.join(' ') : user.username;
   }
 
   return (
-    <Modal open={open} title="Delete User" onClose={onClose}>
+    <Modal open={open} title={t('userDelete.deleteUser')} onClose={onClose}>
       <form className="form" onSubmit={(e) => {
         e.preventDefault();
         if (onConfirm) {
@@ -26,16 +29,16 @@ function UserDeleteModal({ open, user, onClose, onConfirm }: UserDeleteModalProp
       }}>
         {user && (
           <p>
-            Are you sure you want to delete the user <strong>{getUserFullName(user)}</strong> ({user.username})? 
-            This action cannot be undone.
+            {t('userDelete.confirmDelete')} <strong>{getUserFullName(user)}</strong> ({user.username})? 
+            {t('departmentModal.cannotUndo')}
           </p>
         )}
         <div className="form__actions">
           <button type="button" className="btn btn--ghost" onClick={onClose}>
-            Cancel
+            {t('modal.cancel')}
           </button>
           <button type="submit" className="btn btn--danger">
-            Delete
+            {t('common.delete')}
           </button>
         </div>
       </form>

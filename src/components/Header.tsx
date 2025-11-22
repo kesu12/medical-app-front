@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import logo from '../logo.svg';
 import '../App.css';
 import { useUser } from '../contexts/UserContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import NotificationBell from './NotificationBell';
 
 type HeaderProps = {
@@ -12,6 +12,7 @@ type HeaderProps = {
 
 function Header({ onOpenLogin, onOpenRegister }: HeaderProps) {
   const { user, logout } = useUser();
+  const { t } = useLanguage();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -43,20 +44,20 @@ function Header({ onOpenLogin, onOpenRegister }: HeaderProps) {
   return (
     <header className="app-header">
       <div className="app-header__left">
-        <Link to="/" className="app-header__logo-link" aria-label="Home">
-          <img src={logo} alt="Medical App" className="app-header__logo" />
+        <Link to="/" className="app-header__logo-link" aria-label="Health & Life">
+          <img src="/logo_Done3.png" alt="Health & Life" className="app-header__logo" />
         </Link>
         {user && (
         <nav className="app-header__nav">
-          <Link to="/doctors" className="btn btn--ghost">Doctors</Link>
-            <Link to="/departments" className="btn btn--ghost">Departments</Link>
+          <Link to="/doctors" className="btn btn--ghost">{t('header.doctors')}</Link>
+            <Link to="/departments" className="btn btn--ghost">{t('header.departments')}</Link>
             {user.role === 'ADMIN' && (
-              <Link to="/admin-users" className="btn btn--ghost">Users (A)</Link>
+              <Link to="/admin-users" className="btn btn--ghost">{t('header.users')}</Link>
             )}
             {user.role === 'NURSE' && (
-              <Link to="/nurse-cabinet" className="btn btn--ghost">Nurse Cabinet</Link>
+              <Link to="/nurse-cabinet" className="btn btn--ghost">{t('header.nurseCabinet')}</Link>
             )}
-            <Link to="/medical-indicators" className="btn btn--ghost">Indicators</Link>
+            <Link to="/medical-indicators" className="btn btn--ghost">{t('header.indicators')}</Link>
         </nav>
         )}
       </div>
@@ -64,7 +65,7 @@ function Header({ onOpenLogin, onOpenRegister }: HeaderProps) {
         {user ? (
           <>
             {(user.role === 'PATIENT' || user.role === 'DOCTOR' || user.role === 'NURSE') && (
-              <Link to="/cabinet" className="btn btn--ghost">Cabinet</Link>
+              <Link to="/cabinet" className="btn btn--ghost">{t('header.cabinet')}</Link>
             )}
             <NotificationBell />
             <div className="app-header__user-menu" ref={dropdownRef}>
@@ -82,20 +83,20 @@ function Header({ onOpenLogin, onOpenRegister }: HeaderProps) {
                     className="app-header__dropdown-item"
                     onClick={() => setDropdownOpen(false)}
                   >
-                    Profile
+                    {t('header.profile')}
                   </Link>
                   <Link
                     to="/settings"
                     className="app-header__dropdown-item"
                     onClick={() => setDropdownOpen(false)}
                   >
-                    Settings
+                    {t('header.settings')}
                   </Link>
                   <button
                     className="app-header__dropdown-item app-header__dropdown-item--danger"
                     onClick={handleLogout}
                   >
-                    Log Out
+                    {t('header.logout')}
                   </button>
                 </div>
               )}
@@ -103,8 +104,8 @@ function Header({ onOpenLogin, onOpenRegister }: HeaderProps) {
           </>
         ) : (
           <>
-            <button className="btn btn--ghost" onClick={onOpenLogin}>Login</button>
-            <button className="btn btn--primary" onClick={onOpenRegister}>Register</button>
+            <button className="btn btn--ghost" onClick={onOpenLogin}>{t('header.login')}</button>
+            <button className="btn btn--primary" onClick={onOpenRegister}>{t('header.register')}</button>
           </>
         )}
       </div>

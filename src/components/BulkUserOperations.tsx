@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { bulkUpdateUsers, bulkConfirmUsers, AdminUser, UserRole } from '../api/adminUsers';
+import { useLanguage } from '../contexts/LanguageContext';
 
 type BulkUserOperationsProps = {
   selectedUsers: AdminUser[];
@@ -12,6 +13,7 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
   onSuccess, 
   onClose 
 }) => {
+  const { t } = useLanguage();
   const [operation, setOperation] = useState<'confirm' | 'update' | null>(null);
   const [departmentId, setDepartmentId] = useState<string>('');
   const [role, setRole] = useState<UserRole | ''>('');
@@ -86,8 +88,8 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
           maxWidth: '500px',
           width: '90%'
         }}>
-          <h2>Bulk Operations</h2>
-          <p>Selected users: {selectedUsers.length}</p>
+          <h2>{t('bulk.title')}</h2>
+          <p>{t('bulk.selectedUsers')} {selectedUsers.length}</p>
           
           <div style={{ display: 'grid', gap: '10px', marginTop: '20px' }}>
             <button
@@ -102,7 +104,7 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
                 fontWeight: 'bold'
               }}
             >
-              Bulk Confirm Users
+              {t('bulk.bulkConfirm')}
             </button>
             
             <button
@@ -117,7 +119,7 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
                 fontWeight: 'bold'
               }}
             >
-              Bulk Update Users
+              {t('bulk.bulkUpdate')}
             </button>
             
             <button
@@ -131,7 +133,7 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
                 cursor: 'pointer'
               }}
             >
-              Cancel
+              {t('modal.cancel')}
             </button>
           </div>
         </div>
@@ -160,8 +162,8 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
           maxWidth: '500px',
           width: '90%'
         }}>
-          <h2>Confirm Users</h2>
-          <p>Are you sure you want to confirm {selectedUsers.length} users?</p>
+          <h2>{t('bulk.confirmUsers')}</h2>
+          <p>{t('bulk.confirmQuestion')} {selectedUsers.length} {t('bulk.users')}</p>
           
           {error && (
             <div style={{ 
@@ -190,7 +192,7 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
                 fontWeight: 'bold'
               }}
             >
-              {loading ? 'Confirming...' : 'Confirm'}
+              {loading ? t('bulk.confirming') : t('common.confirm')}
             </button>
             
             <button
@@ -206,7 +208,7 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
                 cursor: loading ? 'not-allowed' : 'pointer'
               }}
             >
-              Back
+              {t('bulk.back')}
             </button>
           </div>
         </div>
@@ -234,8 +236,8 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
         maxWidth: '500px',
         width: '90%'
       }}>
-        <h2>Update Users</h2>
-        <p>Updating {selectedUsers.length} users</p>
+        <h2>{t('bulk.updateUsers')}</h2>
+        <p>{t('bulk.updating')} {selectedUsers.length} {t('bulk.users')}</p>
         
         {error && (
           <div style={{ 
@@ -252,7 +254,7 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
         <div style={{ display: 'grid', gap: '15px', marginTop: '20px' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Department ID (optional):
+              {t('bulk.departmentId')}
             </label>
             <input
               type="number"
@@ -269,7 +271,7 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
           
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Role (optional):
+              {t('bulk.roleOptional')}
             </label>
             <select
               value={role}
@@ -281,7 +283,7 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
                 border: '1px solid #ccc'
               }}
             >
-              <option value="">-- No change --</option>
+              <option value="">{t('bulk.noChange')}</option>
               <option value="ADMIN">ADMIN</option>
               <option value="DOCTOR">DOCTOR</option>
               <option value="NURSE">NURSE</option>
@@ -297,7 +299,7 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
                 checked={isConfirmed}
                 onChange={(e) => setIsConfirmed(e.target.checked)}
               />
-              <span style={{ fontWeight: 'bold' }}>Mark as Confirmed</span>
+              <span style={{ fontWeight: 'bold' }}>{t('bulk.markConfirmed')}</span>
             </label>
           </div>
         </div>
@@ -317,7 +319,7 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
               fontWeight: 'bold'
             }}
           >
-            {loading ? 'Updating...' : 'Update'}
+            {loading ? t('bulk.confirming') : t('common.update')}
           </button>
           
           <button
@@ -333,7 +335,7 @@ const BulkUserOperations: React.FC<BulkUserOperationsProps> = ({
               cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >
-            Back
+            {t('bulk.back')}
           </button>
         </div>
       </div>

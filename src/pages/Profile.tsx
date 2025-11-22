@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { updateProfile } from '../api/auth';
 import AvatarEditModal from '../components/AvatarEditModal';
 import '../App.css';
 
 function Profile() {
   const { user, loading, refreshUser, logout } = useUser();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   // Общая информация
@@ -22,7 +24,6 @@ function Profile() {
 
   const [submittingGeneral, setSubmittingGeneral] = useState(false);
   const [submittingContact, setSubmittingContact] = useState(false);
-  const [submittingAvatar, setSubmittingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [avatarEditOpen, setAvatarEditOpen] = useState(false);
   const [avatarHovered, setAvatarHovered] = useState(false);
@@ -102,7 +103,6 @@ function Profile() {
   async function handleAvatarSave(avatarUrl: string) {
     if (!user) return;
 
-    setSubmittingAvatar(true);
     setError(null);
     try {
       await updateProfile({
@@ -111,8 +111,6 @@ function Profile() {
       await refreshUser();
     } catch (err: any) {
       setError(err?.message || 'Failed to update avatar');
-    } finally {
-      setSubmittingAvatar(false);
     }
   }
 
@@ -124,7 +122,7 @@ function Profile() {
   if (loading) {
     return (
       <div className="page">
-        <div>Loading...</div>
+        <div>{t('common.loading')}</div>
       </div>
     );
   }
@@ -148,7 +146,7 @@ function Profile() {
   return (
     <div className="page">
       <div className="profile">
-        <h1 className="profile__title">Profile</h1>
+        <h1 className="profile__title">{t('profile.title')}</h1>
         <div className="profile__content">
           <div className="profile__avatar-section">
             <div
@@ -184,38 +182,38 @@ function Profile() {
             
             {/* Общая информация */}
             <div className="profile__section">
-              <h2 className="profile__section-title">Общая информация</h2>
+              <h2 className="profile__section-title">{t('profile.generalInfo')}</h2>
               <form onSubmit={handleGeneralSubmit} className="profile__form">
                 <div className="profile__form-row">
                   <label className="profile__form-field">
-                    <span className="profile__form-label">First Name</span>
+                    <span className="profile__form-label">{t('auth.firstName')}</span>
                     <input
                       type="text"
                       className="profile__form-input"
                       value={firstName}
                       onChange={e => setFirstName(e.target.value)}
-                      placeholder="Введите имя..."
+                      placeholder={t('auth.firstName')}
                     />
                   </label>
                   <label className="profile__form-field">
-                    <span className="profile__form-label">Middle Name</span>
+                    <span className="profile__form-label">{t('auth.middleName')}</span>
                     <input
                       type="text"
                       className="profile__form-input"
                       value={middleName}
                       onChange={e => setMiddleName(e.target.value)}
-                      placeholder="Введите отчество..."
+                      placeholder={t('auth.middleName')}
                     />
                   </label>
                 </div>
                 <label className="profile__form-field">
-                  <span className="profile__form-label">Last Name</span>
+                  <span className="profile__form-label">{t('auth.lastName')}</span>
                   <input
                     type="text"
                     className="profile__form-input"
                     value={lastName}
                     onChange={e => setLastName(e.target.value)}
-                    placeholder="Введите фамилию..."
+                    placeholder={t('auth.lastName')}
                   />
                 </label>
                 <button
@@ -223,33 +221,33 @@ function Profile() {
                   className="btn btn--primary profile__submit-btn"
                   disabled={!generalChanged || submittingGeneral || submittingContact}
                 >
-                  {submittingGeneral ? 'Saving...' : 'Submit'}
+                  {submittingGeneral ? t('profile.saving') : t('profile.saveChanges')}
                 </button>
               </form>
             </div>
 
             {/* Контактная информация */}
             <div className="profile__section">
-              <h2 className="profile__section-title">Контактная информация</h2>
+              <h2 className="profile__section-title">{t('profile.contactInfo')}</h2>
               <form onSubmit={handleContactSubmit} className="profile__form">
                 <label className="profile__form-field">
-                  <span className="profile__form-label">Email</span>
+                  <span className="profile__form-label">{t('common.email')}</span>
                   <input
                     type="email"
                     className="profile__form-input"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    placeholder="Введите email..."
+                    placeholder={t('common.email')}
                   />
                 </label>
                 <label className="profile__form-field">
-                  <span className="profile__form-label">Phone Number</span>
+                  <span className="profile__form-label">{t('common.phone')}</span>
                   <input
                     type="tel"
                     className="profile__form-input"
                     value={phoneNumber}
                     onChange={e => setPhoneNumber(e.target.value)}
-                    placeholder="Введите номер телефона..."
+                    placeholder={t('common.phone')}
                   />
                 </label>
                 <button
@@ -257,7 +255,7 @@ function Profile() {
                   className="btn btn--primary profile__submit-btn"
                   disabled={!contactChanged || submittingContact || submittingGeneral}
                 >
-                  {submittingContact ? 'Saving...' : 'Submit'}
+                  {submittingContact ? t('profile.saving') : t('profile.saveChanges')}
                 </button>
               </form>
             </div>

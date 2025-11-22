@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useUser } from '../contexts/UserContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   fetchNotifications,
   fetchUnreadCount,
@@ -12,6 +13,7 @@ const REFRESH_INTERVAL_MS = 60_000;
 
 function NotificationBell() {
   const { user } = useUser();
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -81,19 +83,19 @@ function NotificationBell() {
     const diffMs = now - createdAt;
 
     if (diffMs < 60_000) {
-      return 'just now';
+      return t('notifications.justNow');
     }
     const minutes = Math.floor(diffMs / 60_000);
     if (minutes < 60) {
-      return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
+      return `${minutes} ${minutes === 1 ? t('notifications.minAgo') : t('notifications.minsAgo')}`;
     }
     const hours = Math.floor(minutes / 60);
     if (hours < 24) {
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+      return `${hours} ${hours === 1 ? t('notifications.hourAgo') : t('notifications.hoursAgo')}`;
     }
     const days = Math.floor(hours / 24);
-    return `${days} day${days > 1 ? 's' : ''} ago`;
-  }, []);
+    return `${days} ${days === 1 ? t('notifications.dayAgo') : t('notifications.daysAgo')}`;
+  }, [t]);
 
   const formattedNotifications = useMemo(() => notifications, [notifications]);
 
@@ -141,9 +143,9 @@ function NotificationBell() {
         <div className="notification-panel">
           <div className="notification-panel__header">
             <div>
-              <p className="notification-panel__title">Notifications</p>
+              <p className="notification-panel__title">{t('notifications.title')}</p>
               <p className="notification-panel__subtitle">
-                {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+                {unreadCount > 0 ? `${unreadCount} ${t('notifications.unread')}` : t('notifications.allCaughtUp')}
               </p>
             </div>
             <button
@@ -151,18 +153,18 @@ function NotificationBell() {
               disabled={unreadCount === 0}
               onClick={handleMarkAll}
             >
-              Mark all read
+              {t('notifications.markAllRead')}
             </button>
           </div>
           <div className="notification-panel__body">
-            {loading && <div className="notification-panel__status">Loading...</div>}
+            {loading && <div className="notification-panel__status">{t('common.loading')}</div>}
             {error && !loading && (
               <div className="notification-panel__status notification-panel__status--error">
                 {error}
               </div>
             )}
             {!loading && !error && formattedNotifications.length === 0 && (
-              <div className="notification-panel__status">No notifications yet</div>
+              <div className="notification-panel__status">{t('notifications.noNotifications')}</div>
             )}
             {!loading && !error && formattedNotifications.length > 0 && (
               <ul className="notification-panel__list">

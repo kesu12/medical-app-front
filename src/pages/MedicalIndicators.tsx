@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   submitMedicalIndicators, 
   generateRandomIndicators, 
@@ -10,6 +11,7 @@ import {
 } from '../api/medicalIndicators';
 
 const MedicalIndicatorsPage: React.FC = () => {
+  const { t } = useLanguage();
   const [indicators, setIndicators] = useState<MedicalIndicators>({
     heartrate: 75,
     temperature: 36.6,
@@ -114,7 +116,7 @@ const MedicalIndicatorsPage: React.FC = () => {
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1>Medical Indicators</h1>
+      <h1>{t('indicators.title')}</h1>
       
       {error && (
         <div style={{ 
@@ -135,12 +137,12 @@ const MedicalIndicatorsPage: React.FC = () => {
         marginBottom: '20px',
         backgroundColor: '#f9f9f9'
       }}>
-        <h2>Input Indicators</h2>
+        <h2>{t('indicators.inputIndicators')}</h2>
         
         <div style={{ display: 'grid', gap: '15px' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Patient ID:
+              {t('indicators.patientId')}
             </label>
             <input
               type="number"
@@ -157,7 +159,7 @@ const MedicalIndicatorsPage: React.FC = () => {
 
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Heart Rate (bpm):
+              {t('indicators.heartRate')}
             </label>
             <input
               type="number"
@@ -174,7 +176,7 @@ const MedicalIndicatorsPage: React.FC = () => {
 
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Temperature (°C):
+              {t('indicators.temperature')}
             </label>
             <input
               type="number"
@@ -192,7 +194,7 @@ const MedicalIndicatorsPage: React.FC = () => {
 
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              SpO2 (%):
+              {t('indicators.spo2')}
             </label>
             <input
               type="number"
@@ -227,7 +229,7 @@ const MedicalIndicatorsPage: React.FC = () => {
               fontWeight: 'bold'
             }}
           >
-            Submit
+            {t('indicators.submit')}
           </button>
 
           <button
@@ -243,7 +245,7 @@ const MedicalIndicatorsPage: React.FC = () => {
               fontWeight: 'bold'
             }}
           >
-            Analyze
+            {t('indicators.analyze')}
           </button>
 
           <button
@@ -259,7 +261,7 @@ const MedicalIndicatorsPage: React.FC = () => {
               fontWeight: 'bold'
             }}
           >
-            Load Latest
+            {t('indicators.loadLatest')}
           </button>
 
           <button
@@ -275,7 +277,7 @@ const MedicalIndicatorsPage: React.FC = () => {
               fontWeight: 'bold'
             }}
           >
-            Random Normal
+            {t('indicators.randomNormal')}
           </button>
 
           <button
@@ -291,7 +293,7 @@ const MedicalIndicatorsPage: React.FC = () => {
               fontWeight: 'bold'
             }}
           >
-            Random Critical
+            {t('indicators.randomCritical')}
           </button>
         </div>
       </div>
@@ -305,7 +307,7 @@ const MedicalIndicatorsPage: React.FC = () => {
           backgroundColor: '#fff'
         }}>
           <h2 style={{ color: getAlertColor(submitResponse.alertLevel) }}>
-            Submit Response
+            {t('indicators.submitResponse')}
           </h2>
           <p><strong>Status:</strong> {submitResponse.status}</p>
           <p><strong>Message:</strong> {submitResponse.message}</p>
@@ -325,7 +327,7 @@ const MedicalIndicatorsPage: React.FC = () => {
           padding: '20px',
           backgroundColor: '#fff'
         }}>
-          <h2>Analysis Results</h2>
+          <h2>{t('indicators.analysisResults')}</h2>
           <div style={{ display: 'grid', gap: '10px' }}>
             <p><strong>Heart Rate Status:</strong> {analysis.heartrateStatus}</p>
             <p><strong>Temperature Status:</strong> {analysis.temperatureStatus}</p>

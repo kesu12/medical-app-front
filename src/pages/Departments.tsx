@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getAllDepartments, Department } from '../api/departments';
 import DepartmentModal from '../components/DepartmentModal';
 import '../App.css';
 
 function Departments() {
   const { user, loading: userLoading } = useUser();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -40,7 +42,7 @@ function Departments() {
         // If user is not admin, they might not have access to this endpoint
         // In that case, we could extract departments from doctors or show empty list
         if (err?.message?.includes('403') || err?.message?.includes('Forbidden')) {
-          setError('You do not have permission to view departments');
+          setError(t('departments.noPermission'));
         } else {
           setError(err?.message || 'Failed to load departments');
         }
@@ -52,7 +54,7 @@ function Departments() {
     if (user) {
       loadDepartments();
     }
-  }, [user]);
+  }, [user, t]);
 
   function handleCreate() {
     setSelectedDepartment(undefined);
@@ -89,7 +91,7 @@ function Departments() {
   if (userLoading || loading) {
     return (
       <div className="page">
-        <div>Loading...</div>
+        <div>{t('common.loading')}</div>
       </div>
     );
   }
@@ -102,10 +104,10 @@ function Departments() {
     <div className="page">
       <div className="departments">
         <div className="departments__header">
-          <h1 className="departments__title">Departments</h1>
+          <h1 className="departments__title">{t('departments.title')}</h1>
           {isAdmin && (
             <button className="btn btn--primary" onClick={handleCreate}>
-              Create Department
+              {t('departments.createDepartment')}
             </button>
           )}
         </div>
@@ -116,7 +118,7 @@ function Departments() {
 
         {departments.length === 0 && !error ? (
           <div className="departments__empty">
-            <p>No departments found</p>
+            <p>{t('departments.noDepartments')}</p>
           </div>
         ) : (
           <div className="departments__grid">
@@ -131,7 +133,7 @@ function Departments() {
                     )}
                     {dept.users && Array.isArray(dept.users) && (
                       <p className="departments__card-count">
-                        {dept.users.length} member{dept.users.length !== 1 ? 's' : ''}
+                        {dept.users.length} {dept.users.length === 1 ? t('departments.member') : t('departments.members')}
                       </p>
                     )}
                   </div>
@@ -141,13 +143,13 @@ function Departments() {
                         className="btn btn--update"
                         onClick={() => handleUpdate(dept)}
                       >
-                        Update Department
+                        {t('common.update')}
                       </button>
                       <button
                         className="btn btn--delete"
                         onClick={() => handleDelete(dept)}
                       >
-                        Delete Department
+                        {t('common.delete')}
                       </button>
                     </div>
                   )}

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getAllDoctors, getDoctorsByDepartment, Doctor } from '../api/doctors';
 import { getAllDepartments, Department } from '../api/departments';
 import '../App.css';
 
 function Doctors() {
   const { user, loading: userLoading } = useUser();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -130,7 +132,7 @@ function Doctors() {
   if (userLoading || loading) {
     return (
       <div className="page">
-        <div>Loading...</div>
+        <div>{t('common.loading')}</div>
       </div>
     );
   }
@@ -142,7 +144,7 @@ function Doctors() {
   return (
     <div className="page">
       <div className="doctors">
-        <h1 className="doctors__title">Doctors</h1>
+        <h1 className="doctors__title">{t('doctors.title')}</h1>
         
         {error && (
           <div className="doctors__error form__error">{error}</div>
@@ -154,7 +156,7 @@ function Doctors() {
             <input
               type="text"
               className="form__input"
-              placeholder="Search by name, username, email, or department..."
+              placeholder={t('doctors.searchDoctors')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -162,7 +164,7 @@ function Doctors() {
           
           <div className="doctors__department-filter">
             <label className="form__field">
-              <span className="form__label">Department</span>
+              <span className="form__label">{t('cabinet.department')}</span>
               <select
                 className="form__input"
                 value={selectedDepartment || ''}
@@ -180,7 +182,7 @@ function Doctors() {
                   }
                 }}
               >
-                <option value="">All Departments</option>
+                <option value="">{t('doctors.allDepartments')}</option>
                 {departments
                   .filter(dept => {
                     const deptId = dept.departmentId ?? dept.id;
@@ -202,10 +204,10 @@ function Doctors() {
         {/* Results count */}
         <div className="doctors__results-count">
           {filteredDoctors.length === 0 ? (
-            <p>No doctors found</p>
+            <p>{t('doctors.noDoctors')}</p>
           ) : (
             <p>
-              {filteredDoctors.length} doctor{filteredDoctors.length !== 1 ? 's' : ''} found
+              {filteredDoctors.length} {filteredDoctors.length === 1 ? t('doctors.doctor') : t('doctors.doctors')} {t('doctors.found')}
             </p>
           )}
         </div>
@@ -226,17 +228,17 @@ function Doctors() {
                 <p className="doctors__card-username">@{doctor.username}</p>
                 {doctor.department && (
                   <p className="doctors__card-department">
-                    <span className="doctors__card-label">Department:</span> {doctor.department.name}
+                    <span className="doctors__card-label">{t('doctors.department')}</span> {doctor.department.name}
                   </p>
                 )}
                 {doctor.email && (
                   <p className="doctors__card-email">
-                    <span className="doctors__card-label">Email:</span> {doctor.email}
+                    <span className="doctors__card-label">{t('doctors.email')}</span> {doctor.email}
                   </p>
                 )}
                 {doctor.phoneNumber && (
                   <p className="doctors__card-phone">
-                    <span className="doctors__card-label">Phone:</span> {doctor.phoneNumber}
+                    <span className="doctors__card-label">{t('doctors.phone')}</span> {doctor.phoneNumber}
                   </p>
                 )}
               </div>

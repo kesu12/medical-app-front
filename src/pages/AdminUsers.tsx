@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   getAllUsers, 
   getUsersByRole, 
@@ -20,6 +21,7 @@ import '../App.css';
 
 function AdminUsers() {
   const { user, loading: userLoading } = useUser();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -229,7 +231,7 @@ function AdminUsers() {
             <input
               type="text"
               className="form__input"
-              placeholder="Search by name, username, email, or ID..."
+              placeholder={t('adminUsers.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -243,7 +245,7 @@ function AdminUsers() {
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value as UserRole | '')}
               >
-                <option value="">All Roles</option>
+                <option value="">{t('adminUsers.allRoles')}</option>
                 <option value="ADMIN">Admin</option>
                 <option value="DOCTOR">Doctor</option>
                 <option value="NURSE">Nurse</option>
@@ -255,11 +257,11 @@ function AdminUsers() {
 
           <div className="admin-users__filter-group">
             <label className="form__field">
-              <span className="form__label">User ID</span>
+              <span className="form__label">{t('adminUsers.userId')}</span>
               <input
                 type="number"
                 className="form__input"
-                placeholder="Enter user ID..."
+                placeholder={t('adminUsers.searchPlaceholder')}
                 value={filterUserId}
                 onChange={(e) => setFilterUserId(e.target.value)}
               />
@@ -268,7 +270,7 @@ function AdminUsers() {
 
           <div className="admin-users__filter-group">
             <label className="form__field">
-              <span className="form__label">Start Date</span>
+              <span className="form__label">{t('adminUsers.startDate')}</span>
               <input
                 type="date"
                 className="form__input"
@@ -280,7 +282,7 @@ function AdminUsers() {
 
           <div className="admin-users__filter-group">
             <label className="form__field">
-              <span className="form__label">End Date</span>
+              <span className="form__label">{t('adminUsers.endDate')}</span>
               <input
                 type="date"
                 className="form__input"
@@ -295,11 +297,11 @@ function AdminUsers() {
         <div className="admin-users__results-count" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             {filteredUsers.length === 0 ? (
-              <p>No users found</p>
+              <p>{t('adminUsers.noUsers')}</p>
             ) : (
               <p>
-                {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} found
-                {selectedUserIds.size > 0 && ` (${selectedUserIds.size} selected)`}
+                {filteredUsers.length} {filteredUsers.length === 1 ? t('adminUsers.userFound') : t('adminUsers.usersFound')}
+                {selectedUserIds.size > 0 && ` (${selectedUserIds.size} ${t('adminUsers.selected')})`}
               </p>
             )}
           </div>
@@ -308,7 +310,7 @@ function AdminUsers() {
               className="btn btn--primary"
               onClick={() => setBulkOperationsOpen(true)}
             >
-              Bulk Operations ({selectedUserIds.size})
+              {t('adminUsers.bulkOperations')} ({selectedUserIds.size})
             </button>
           )}
         </div>
@@ -326,13 +328,13 @@ function AdminUsers() {
                   />
                 </th>
                 <th>ID</th>
-                <th>Name</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Department</th>
+                <th>{t('common.name')}</th>
+                <th>{t('auth.username')}</th>
+                <th>{t('common.email')}</th>
+                <th>{t('common.role')}</th>
+                <th>{t('cabinet.department')}</th>
                 <th>Created</th>
-                <th>Actions</th>
+                <th>{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>

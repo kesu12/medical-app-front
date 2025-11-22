@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   getActivePatients,
   getPatientsWithoutDoctor,
@@ -15,7 +16,7 @@ import {
   getAllNurses,
   Patient
 } from '../api/patients';
-import { getLatestIndicators } from '../api/medicalIndicators';
+import { getLatestIndicators, analyzeMedicalIndicators, MedicalIndicatorsAnalysis } from '../api/medicalIndicators';
 import { getAllDepartments, Department } from '../api/departments';
 import '../App.css';
 
@@ -43,6 +44,7 @@ type StompSubscription = {
 
 function Cabinet() {
   const { user, loading: userLoading } = useUser();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   
   // WebSocket
@@ -71,6 +73,13 @@ function Cabinet() {
   const [selectedPatientForNurse, setSelectedPatientForNurse] = useState<Patient | null>(null);
   const [showAssignDepartmentModal, setShowAssignDepartmentModal] = useState(false);
   const [selectedPatientForDepartment, setSelectedPatientForDepartment] = useState<Patient | null>(null);
+  
+  // Indicators Analysis Modal
+  const [showIndicatorsModal, setShowIndicatorsModal] = useState(false);
+  const [selectedPatientForIndicators, setSelectedPatientForIndicators] = useState<Patient | null>(null);
+  const [currentIndicators, setCurrentIndicators] = useState<MedicalIndicators | null>(null);
+  const [indicatorsAnalysis, setIndicatorsAnalysis] = useState<MedicalIndicatorsAnalysis | null>(null);
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -292,12 +301,25 @@ function Cabinet() {
   };
 
   // Get last indicators for patient (DOCTOR role)
-  const handleGetLastIndicators = async (patientId: number) => {
+  const handleGetLastIndicators = async (patient: Patient) => {
+    setLoadingAnalysis(true);
+    setShowIndicatorsModal(true);
+    setSelectedPatientForIndicators(patient);
+    setCurrentIndicators(null);
+    setIndicatorsAnalysis(null);
+    
     try {
-      const latestData = await getLatestIndicators(patientId);
-      setIndicators(prev => new Map(prev).set(patientId, latestData));
+      const latestData = await getLatestIndicators(patient.userId);
+      setCurrentIndicators(latestData);
+      
+      // Get analysis
+      const analysis = await analyzeMedicalIndicators(latestData);
+      setIndicatorsAnalysis(analysis);
     } catch (err: any) {
       alert(err?.message || 'Failed to load latest indicators');
+      setShowIndicatorsModal(false);
+    } finally {
+      setLoadingAnalysis(false);
     }
   };
 
@@ -455,7 +477,7 @@ function Cabinet() {
   return (
     <div className="page">
       <div className="cabinet">
-        <h1 className="cabinet__title">Cabinet</h1>
+        <h1 className="cabinet__title">{t('cabinet.title')}</h1>
         
         {error && (
           <div className="cabinet__error form__error">{error}</div>
@@ -465,11 +487,11 @@ function Cabinet() {
         {user.role === 'PATIENT' && patientInfo && (
           <>
             <div className="cabinet__section">
-              <h2 className="cabinet__section-title">My Information</h2>
+              <h2 className="cabinet__section-title">{t('cabinet.myInformation')}</h2>
               
               <div className="cabinet__info-card">
                 <div className="cabinet__info-item">
-                  <span className="cabinet__info-label">Assigned Doctor:</span>
+                  <span className="cabinet__info-label">{t('cabinet.assignedDoctor')}</span>
                   <span className="cabinet__info-value">
                     {getDoctorFullName(patientInfo.assignedDoctor)}
                   </span>
@@ -480,7 +502,7 @@ function Cabinet() {
             {/* Treatment Plan Section */}
             {patientInfo.treatment && (
               <div className="cabinet__section">
-                <h2 className="cabinet__section-title">План лечения</h2>
+                <h2 className="cabinet__section-title">{t('cabinet.treatmentPlan')}</h2>
                 <div className="cabinet__treatment-card">
                   <div className="cabinet__treatment-content">
                     {patientInfo.treatment}
@@ -490,14 +512,14 @@ function Cabinet() {
             )}
 
             <div className="cabinet__section">
-              <h3 className="cabinet__section-subtitle">Medical Indicators</h3>
+              <h3 className="cabinet__section-subtitle">{t('cabinet.medicalIndicators')}</h3>
               
               {!monitoringPatients.has(user.userId) ? (
                 <button
                   className="btn btn--primary"
                   onClick={handleGetIndicators}
                 >
-                  Get Indicators
+                  {t('cabinet.getIndicators')}
                 </button>
               ) : (
                 <>
@@ -505,25 +527,25 @@ function Cabinet() {
                     className="btn btn--secondary"
                     onClick={() => stopMonitoring(user.userId)}
                   >
-                    Stop Monitoring
+                    {t('cabinet.stopMonitoring')}
                   </button>
                   
                   {indicators.has(user.userId) && (
                     <div className="cabinet__indicators">
                       <div className="cabinet__indicator">
-                        <span className="cabinet__indicator-label">Heart Rate:</span>
+                        <span className="cabinet__indicator-label">{t('cabinet.heartRate')}</span>
                         <span className="cabinet__indicator-value">
                           {indicators.get(user.userId)?.heartrate} bpm
                         </span>
                       </div>
                       <div className="cabinet__indicator">
-                        <span className="cabinet__indicator-label">Temperature:</span>
+                        <span className="cabinet__indicator-label">{t('cabinet.temperature')}</span>
                         <span className="cabinet__indicator-value">
                           {indicators.get(user.userId)?.temperature}°C
                         </span>
                       </div>
                       <div className="cabinet__indicator">
-                        <span className="cabinet__indicator-label">SpO2:</span>
+                        <span className="cabinet__indicator-label">{t('cabinet.spo2')}</span>
                         <span className="cabinet__indicator-value">
                           {indicators.get(user.userId)?.spo2}%
                         </span>
@@ -542,7 +564,7 @@ function Cabinet() {
             {/* My Patients */}
             {myPatients.length > 0 ? (
               <div className="cabinet__section">
-                <h2 className="cabinet__section-title">My Patients</h2>
+                <h2 className="cabinet__section-title">{t('cabinet.myPatients')}</h2>
                 <div className="cabinet__patients-grid">
                   {myPatients.map(patient => (
                     <div key={patient.userId} className="cabinet__patient-card">
@@ -552,51 +574,23 @@ function Cabinet() {
                       {/* Treatment Plan */}
                       {patient.treatment && (
                         <div className="cabinet__patient-treatment">
-                          <strong className="cabinet__patient-treatment-label">План лечения:</strong>
+                          <strong className="cabinet__patient-treatment-label">{t('cabinet.treatmentPlan')}:</strong>
                           <p className="cabinet__patient-treatment-text">{patient.treatment}</p>
                         </div>
                       )}
                       
-                      {indicators.has(patient.userId) ? (
-                        <>
-                          <div className="cabinet__indicators">
-                            <div className="cabinet__indicator">
-                              <span>HR: {indicators.get(patient.userId)?.heartrate} bpm</span>
-                            </div>
-                            <div className="cabinet__indicator">
-                              <span>Temp: {indicators.get(patient.userId)?.temperature}°C</span>
-                            </div>
-                            <div className="cabinet__indicator">
-                              <span>SpO2: {indicators.get(patient.userId)?.spo2}%</span>
-                            </div>
-                          </div>
-                          <button
-                            className="btn btn--secondary btn--small"
-                            onClick={() => {
-                              setIndicators(prev => {
-                                const next = new Map(prev);
-                                next.delete(patient.userId);
-                                return next;
-                              });
-                            }}
-                          >
-                            Clear Indicators
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          className="btn btn--primary btn--small"
-                          onClick={() => handleGetLastIndicators(patient.userId)}
-                        >
-                          Get Last Indicators
-                        </button>
-                      )}
+                      <button
+                        className="btn btn--primary btn--small"
+                        onClick={() => handleGetLastIndicators(patient)}
+                      >
+                        {t('cabinet.getLastIndicators')}
+                      </button>
                       
                       <button
                         className="btn btn--secondary btn--small"
                         onClick={() => handleOpenTreatmentModal(patient)}
                       >
-                        Set Treatment
+                        {t('cabinet.setTreatment')}
                       </button>
                     </div>
                   ))}
@@ -605,7 +599,7 @@ function Cabinet() {
             ) : (
               <div className="cabinet__section">
                 <div className="cabinet__empty-state">
-                  <p>На данный момент у Вас нет активных пациентов</p>
+                  <p>{t('cabinet.noActivePatients')}</p>
                 </div>
               </div>
             )}
@@ -613,7 +607,7 @@ function Cabinet() {
             {/* Unassigned Patients from My Department */}
             {departmentUnassignedPatients.length > 0 && (
               <div className="cabinet__section">
-                <h2 className="cabinet__section-title">Unassigned Patients from My Department</h2>
+                <h2 className="cabinet__section-title">{t('cabinet.unassignedFromDepartment')}</h2>
                 <div className="cabinet__patients-grid">
                   {departmentUnassignedPatients.map(patient => (
                     <div key={patient.userId} className="cabinet__patient-card">
@@ -623,7 +617,7 @@ function Cabinet() {
                         className="btn btn--success btn--small"
                         onClick={() => handleAssignDoctor(patient.userId)}
                       >
-                        Assign
+                        {t('cabinet.assign')}
                       </button>
                     </div>
                   ))}
@@ -634,7 +628,7 @@ function Cabinet() {
             {/* All Unassigned Patients */}
             {unassignedPatients.length > 0 && (
               <div className="cabinet__section">
-                <h2 className="cabinet__section-title">All Unassigned Patients</h2>
+                <h2 className="cabinet__section-title">{t('cabinet.allUnassigned')}</h2>
                 <div className="cabinet__patients-grid">
                   {unassignedPatients.map(patient => (
                     <div key={patient.userId} className="cabinet__patient-card">
@@ -642,7 +636,7 @@ function Cabinet() {
                       <p className="cabinet__patient-username">@{patient.username}</p>
                       {patient.department && (
                         <p className="cabinet__patient-department">
-                          Department: {patient.department.name}
+                          {t('cabinet.department')} {patient.department.name}
                         </p>
                       )}
                     </div>
@@ -693,7 +687,7 @@ function Cabinet() {
             </div>
 
             <div className="cabinet__section">
-              <h2 className="cabinet__section-title">All Patients ({displayPatients.length})</h2>
+              <h2 className="cabinet__section-title">{t('cabinet.allPatients')} ({displayPatients.length})</h2>
               <div className="cabinet__patients-grid">
                 {displayPatients.map(patient => (
                   <div key={patient.userId} className="cabinet__patient-card">
@@ -713,7 +707,7 @@ function Cabinet() {
                           setShowAssignDepartmentModal(true);
                         }}
                       >
-                        Assign Department
+                        {t('cabinet.assignDepartment')}
                       </button>
                       <button
                         className="btn btn--secondary btn--small"
@@ -722,7 +716,7 @@ function Cabinet() {
                           setShowAssignNurseModal(true);
                         }}
                       >
-                        Assign Nurse
+                        {t('cabinet.assignNurse')}
                       </button>
                     </div>
                   </div>
@@ -736,22 +730,22 @@ function Cabinet() {
         {showTreatmentModal && selectedPatientForTreatment && (
           <div className="modal-overlay" onClick={() => setShowTreatmentModal(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h2>Set Treatment for {getPatientFullName(selectedPatientForTreatment)}</h2>
+              <h2>{t('modal.setTreatmentFor')} {getPatientFullName(selectedPatientForTreatment)}</h2>
               <div className="form__field">
                 <textarea
                   className="form__input"
                   rows={10}
                   value={treatmentText}
                   onChange={(e) => setTreatmentText(e.target.value)}
-                  placeholder="Enter treatment instructions..."
+                  placeholder={t('modal.enterTreatment')}
                 />
               </div>
               <div className="modal-actions">
                 <button className="btn btn--primary" onClick={handleSaveTreatment}>
-                  Save
+                  {t('modal.save')}
                 </button>
                 <button className="btn btn--secondary" onClick={() => setShowTreatmentModal(false)}>
-                  Cancel
+                  {t('modal.cancel')}
                 </button>
               </div>
             </div>
@@ -762,7 +756,7 @@ function Cabinet() {
         {showAssignNurseModal && selectedPatientForNurse && (
           <div className="modal-overlay" onClick={() => setShowAssignNurseModal(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h2>Assign Nurse to {getPatientFullName(selectedPatientForNurse)}</h2>
+              <h2>{t('modal.assignNurseTo')} {getPatientFullName(selectedPatientForNurse)}</h2>
               <select
                 className="form__input"
                 onChange={(e) => {
@@ -772,7 +766,7 @@ function Cabinet() {
                   }
                 }}
               >
-                <option value="">Select Nurse</option>
+                <option value="">{t('modal.selectNurse')}</option>
                 {nurses.map(nurse => (
                   <option key={nurse.userId} value={nurse.userId}>
                     {getPatientFullName(nurse)}
@@ -781,7 +775,7 @@ function Cabinet() {
               </select>
               <div className="modal-actions">
                 <button className="btn btn--secondary" onClick={() => setShowAssignNurseModal(false)}>
-                  Cancel
+                  {t('modal.cancel')}
                 </button>
               </div>
             </div>
@@ -792,7 +786,7 @@ function Cabinet() {
         {showAssignDepartmentModal && selectedPatientForDepartment && (
           <div className="modal-overlay" onClick={() => setShowAssignDepartmentModal(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h2>Assign Department to {getPatientFullName(selectedPatientForDepartment)}</h2>
+              <h2>{t('modal.assignDepartmentTo')} {getPatientFullName(selectedPatientForDepartment)}</h2>
               <select
                 className="form__input"
                 onChange={(e) => {
@@ -802,7 +796,7 @@ function Cabinet() {
                   }
                 }}
               >
-                <option value="">Select Department</option>
+                <option value="">{t('modal.selectDepartment')}</option>
                 {departments.map(dept => {
                   const deptId = dept.departmentId ?? dept.id;
                   return (
@@ -814,7 +808,132 @@ function Cabinet() {
               </select>
               <div className="modal-actions">
                 <button className="btn btn--secondary" onClick={() => setShowAssignDepartmentModal(false)}>
-                  Cancel
+                  {t('modal.cancel')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Medical Indicators Analysis Modal */}
+        {showIndicatorsModal && selectedPatientForIndicators && (
+          <div className="modal-overlay" onClick={() => setShowIndicatorsModal(false)}>
+            <div className="modal-content modal-content--large" onClick={(e) => e.stopPropagation()}>
+              <h2>{t('modal.medicalIndicators')} - {getPatientFullName(selectedPatientForIndicators)}</h2>
+              
+              {loadingAnalysis ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <p>{t('modal.loadingAnalysis')}</p>
+                </div>
+              ) : (
+                <>
+                  {currentIndicators && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <h3 style={{ marginBottom: '15px' }}>{t('modal.currentIndicators')}</h3>
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(3, 1fr)', 
+                        gap: '15px',
+                        marginBottom: '20px'
+                      }}>
+                        <div style={{ 
+                          padding: '15px', 
+                          backgroundColor: '#f9fafb', 
+                          borderRadius: '8px',
+                          border: '1px solid #e5e7eb'
+                        }}>
+                          <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '5px' }}>Heart Rate</div>
+                          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1b1b1b' }}>
+                            {currentIndicators.heartrate} <span style={{ fontSize: '14px', fontWeight: 'normal' }}>bpm</span>
+                          </div>
+                        </div>
+                        <div style={{ 
+                          padding: '15px', 
+                          backgroundColor: '#f9fafb', 
+                          borderRadius: '8px',
+                          border: '1px solid #e5e7eb'
+                        }}>
+                          <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '5px' }}>Temperature</div>
+                          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1b1b1b' }}>
+                            {currentIndicators.temperature} <span style={{ fontSize: '14px', fontWeight: 'normal' }}>°C</span>
+                          </div>
+                        </div>
+                        <div style={{ 
+                          padding: '15px', 
+                          backgroundColor: '#f9fafb', 
+                          borderRadius: '8px',
+                          border: '1px solid #e5e7eb'
+                        }}>
+                          <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '5px' }}>SpO2</div>
+                          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1b1b1b' }}>
+                            {currentIndicators.spo2} <span style={{ fontSize: '14px', fontWeight: 'normal' }}>%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {indicatorsAnalysis && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <h3 style={{ marginBottom: '15px' }}>{t('modal.analysis')}</h3>
+                      <div style={{ 
+                        padding: '15px', 
+                        backgroundColor: indicatorsAnalysis.isCritical ? '#fee2e2' : indicatorsAnalysis.requiresAttention ? '#fef3c7' : '#d1fae5',
+                        borderRadius: '8px',
+                        border: '1px solid ' + (indicatorsAnalysis.isCritical ? '#fca5a5' : indicatorsAnalysis.requiresAttention ? '#fcd34d' : '#6ee7b7'),
+                        marginBottom: '15px'
+                      }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{t('modal.overallStatus')}</div>
+                        <div>{indicatorsAnalysis.overallStatus}</div>
+                      </div>
+
+                      <div style={{ display: 'grid', gap: '10px', marginBottom: '15px' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
+                          <strong>Heart Rate:</strong> {indicatorsAnalysis.heartrateStatus}
+                        </div>
+                        <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
+                          <strong>Temperature:</strong> {indicatorsAnalysis.temperatureStatus}
+                        </div>
+                        <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
+                          <strong>SpO2:</strong> {indicatorsAnalysis.spo2Status}
+                        </div>
+                      </div>
+
+                      {indicatorsAnalysis.recommendations && (
+                        <div style={{ 
+                          padding: '15px', 
+                          backgroundColor: '#eff6ff', 
+                          borderRadius: '8px',
+                          border: '1px solid #bfdbfe'
+                        }}>
+                          <div style={{ fontWeight: 'bold', marginBottom: '10px' }}>{t('modal.recommendations')}</div>
+                          <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                            {indicatorsAnalysis.recommendations}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div className="modal-actions">
+                <button 
+                  className="btn btn--primary" 
+                  onClick={() => {
+                    setShowIndicatorsModal(false);
+                    handleOpenTreatmentModal(selectedPatientForIndicators);
+                  }}
+                  disabled={loadingAnalysis}
+                >
+                  {t('cabinet.setTreatment')}
+                </button>
+                <button 
+                  className="btn btn--secondary" 
+                  onClick={() => setShowIndicatorsModal(false)}
+                  disabled={loadingAnalysis}
+                >
+                  {t('modal.close')}
                 </button>
               </div>
             </div>

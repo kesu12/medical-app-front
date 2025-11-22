@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Modal from './Modal';
 import '../App.css';
 import { login as apiLogin, register as apiRegister } from '../api/auth';
+import { useLanguage } from '../contexts/LanguageContext';
 
 type AuthType = 'login' | 'register';
 
@@ -13,6 +14,7 @@ type AuthModalProps = {
 };
 
 function AuthModal({ open, type, onClose, onSuccess }: AuthModalProps) {
+  const { t } = useLanguage();
   // Shared
   const [password, setPassword] = useState('');
   // Login-specific
@@ -60,12 +62,12 @@ function AuthModal({ open, type, onClose, onSuccess }: AuthModalProps) {
   }
 
   return (
-    <Modal open={open} title={isRegister ? 'Create account' : 'Login'} onClose={onClose}>
+    <Modal open={open} title={isRegister ? t('authModal.createAccount') : t('authModal.login')} onClose={onClose}>
       <form className="form" onSubmit={onSubmit}>
         {isRegister ? (
           <>
             <label className="form__field">
-              <span className="form__label">Username</span>
+              <span className="form__label">{t('auth.username')}</span>
               <input
                 type="text"
                 className="form__input"
@@ -75,7 +77,7 @@ function AuthModal({ open, type, onClose, onSuccess }: AuthModalProps) {
               />
             </label>
             <label className="form__field">
-              <span className="form__label">Email</span>
+              <span className="form__label">{t('auth.email')}</span>
               <input
                 type="email"
                 className="form__input"
@@ -86,7 +88,7 @@ function AuthModal({ open, type, onClose, onSuccess }: AuthModalProps) {
             </label>
             <div className="form__row">
               <label className="form__field" style={{flex: 1}}>
-                <span className="form__label">First name</span>
+                <span className="form__label">{t('auth.firstName')}</span>
                 <input
                   type="text"
                   className="form__input"
@@ -95,7 +97,7 @@ function AuthModal({ open, type, onClose, onSuccess }: AuthModalProps) {
                 />
               </label>
               <label className="form__field" style={{flex: 1}}>
-                <span className="form__label">Middle name</span>
+                <span className="form__label">{t('auth.middleName')}</span>
                 <input
                   type="text"
                   className="form__input"
@@ -105,7 +107,7 @@ function AuthModal({ open, type, onClose, onSuccess }: AuthModalProps) {
               </label>
             </div>
             <label className="form__field">
-              <span className="form__label">Last name</span>
+              <span className="form__label">{t('auth.lastName')}</span>
               <input
                 type="text"
                 className="form__input"
@@ -114,7 +116,7 @@ function AuthModal({ open, type, onClose, onSuccess }: AuthModalProps) {
               />
             </label>
             <label className="form__field">
-              <span className="form__label">Password</span>
+              <span className="form__label">{t('auth.password')}</span>
               <input
                 type="password"
                 className="form__input"
@@ -124,7 +126,7 @@ function AuthModal({ open, type, onClose, onSuccess }: AuthModalProps) {
               />
             </label>
             <label className="form__field">
-              <span className="form__label">Confirm password</span>
+              <span className="form__label">{t('auth.confirmPassword')}</span>
               <input
                 type="password"
                 className="form__input"
@@ -137,7 +139,7 @@ function AuthModal({ open, type, onClose, onSuccess }: AuthModalProps) {
         ) : (
           <>
             <label className="form__field">
-              <span className="form__label">Username</span>
+              <span className="form__label">{t('auth.username')}</span>
               <input
                 type="text"
                 className="form__input"
@@ -147,7 +149,7 @@ function AuthModal({ open, type, onClose, onSuccess }: AuthModalProps) {
               />
             </label>
             <label className="form__field">
-              <span className="form__label">Password</span>
+              <span className="form__label">{t('auth.password')}</span>
               <input
                 type="password"
                 className="form__input"
@@ -160,8 +162,8 @@ function AuthModal({ open, type, onClose, onSuccess }: AuthModalProps) {
         )}
         {error && <div className="form__error">{error}</div>}
         <div className="form__actions">
-          <button type="button" className="btn btn--ghost" onClick={onClose} disabled={submitting}>Cancel</button>
-          <button type="submit" className="btn btn--primary" disabled={submitting}>{submitting ? 'Please wait…' : isRegister ? 'Register' : 'Login'}</button>
+          <button type="button" className="btn btn--ghost" onClick={onClose} disabled={submitting}>{t('modal.cancel')}</button>
+          <button type="submit" className="btn btn--primary" disabled={submitting}>{submitting ? t('authModal.pleaseWait') : isRegister ? t('auth.register') : t('auth.login')}</button>
         </div>
       </form>
     </Modal>

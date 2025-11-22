@@ -4,6 +4,7 @@ import AvatarEditModal from './AvatarEditModal';
 import '../App.css';
 import { AdminUser, UserRole, updateUserAdmin } from '../api/adminUsers';
 import { getAllDepartments, Department } from '../api/departments';
+import { useLanguage } from '../contexts/LanguageContext';
 
 type UserEditModalProps = {
   open: boolean;
@@ -13,6 +14,7 @@ type UserEditModalProps = {
 };
 
 function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
+  const { t } = useLanguage();
   // Profile fields
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -24,7 +26,6 @@ function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
   // Role and department
   const [role, setRole] = useState<UserRole>('DEFAULT');
   const [departmentId, setDepartmentId] = useState<number | undefined>();
-  const [isConfirmed, setIsConfirmed] = useState(false);
   
   const [departments, setDepartments] = useState<Department[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -56,7 +57,6 @@ function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
       setAvatarUrl(user.avatarUrl || '');
       setRole(user.role);
       setDepartmentId(user.department?.id || user.department?.departmentId);
-      setIsConfirmed(user.confirmed || false);
     }
     setError(null);
   }, [user, open]);
@@ -92,68 +92,68 @@ function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
   }
 
   return (
-    <Modal open={open} title="Edit User" onClose={onClose}>
+    <Modal open={open} title={t('userEdit.editUser')} onClose={onClose}>
       <form className="form" onSubmit={handleSubmit}>
         <div className="form__row form__row--two-columns">
           <label className="form__field">
-            <span className="form__label">First Name</span>
+            <span className="form__label">{t('auth.firstName')}</span>
             <input
               type="text"
               className="form__input"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              placeholder="Enter first name..."
+              placeholder={t('userEdit.enterFirstName')}
             />
           </label>
 
           <label className="form__field">
-            <span className="form__label">Last Name</span>
+            <span className="form__label">{t('auth.lastName')}</span>
             <input
               type="text"
               className="form__input"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              placeholder="Enter last name..."
+              placeholder={t('userEdit.enterLastName')}
             />
           </label>
         </div>
 
         <label className="form__field">
-          <span className="form__label">Middle Name</span>
+          <span className="form__label">{t('auth.middleName')}</span>
           <input
             type="text"
             className="form__input"
             value={middleName}
             onChange={(e) => setMiddleName(e.target.value)}
-            placeholder="Enter middle name..."
+            placeholder={t('userEdit.enterMiddleName')}
           />
         </label>
 
         <label className="form__field">
-          <span className="form__label">Email *</span>
+          <span className="form__label">{t('common.email')} *</span>
           <input
             type="email"
             className="form__input"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            placeholder="Enter email..."
+            placeholder={t('userEdit.enterEmail')}
           />
         </label>
 
         <label className="form__field">
-          <span className="form__label">Phone Number</span>
+          <span className="form__label">{t('userEdit.phoneNumber')}</span>
           <input
             type="tel"
             className="form__input"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder="Enter phone number..."
+            placeholder={t('userEdit.enterPhone')}
           />
         </label>
 
         <div className="form__field">
-          <span className="form__label">Avatar</span>
+          <span className="form__label">{t('profile.avatar')}</span>
           <div className="user-edit__avatar-section">
             <div className="user-edit__avatar-wrapper">
               <img
@@ -166,14 +166,14 @@ function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
                 className="user-edit__avatar-btn"
                 onClick={() => setAvatarEditOpen(true)}
               >
-                Change Avatar
+                {t('profile.changeAvatar')}
               </button>
             </div>
           </div>
         </div>
 
         <label className="form__field">
-          <span className="form__label">Role *</span>
+          <span className="form__label">{t('userEdit.roleRequired')}</span>
           <select
             className="form__input"
             value={role}
@@ -189,13 +189,13 @@ function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
         </label>
 
         <label className="form__field">
-          <span className="form__label">Department</span>
+          <span className="form__label">{t('cabinet.department')}</span>
           <select
             className="form__input"
             value={departmentId || ''}
             onChange={(e) => setDepartmentId(e.target.value ? parseInt(e.target.value) : undefined)}
           >
-            <option value="">No Department</option>
+            <option value="">{t('userEdit.noDepartment')}</option>
             {departments.map(dept => {
               const deptId = dept.id || dept.departmentId;
               return (
@@ -212,10 +212,10 @@ function UserEditModal({ open, user, onClose, onSuccess }: UserEditModalProps) {
         {error && <div className="form__error">{error}</div>}
         <div className="form__actions">
           <button type="button" className="btn btn--ghost" onClick={onClose} disabled={submitting}>
-            Cancel
+            {t('modal.cancel')}
           </button>
           <button type="submit" className="btn btn--primary" disabled={submitting}>
-            {submitting ? 'Saving...' : 'Save'}
+            {submitting ? t('profile.saving') : t('modal.save')}
           </button>
         </div>
       </form>

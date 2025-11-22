@@ -34,9 +34,10 @@
 }
 
 .app-header__logo {
-  height: 40px;
-  width: 40px;
+  height: 50px;
+  width: auto;
   display: block;
+  max-width: 200px;
 }
 
 .app-header__nav {
@@ -1743,4 +1744,19 @@ select.profile__form-input:focus {
   word-wrap: break-word;
   max-height: 120px;
   overflow-y: auto;
+}
+
+/* Large Modal */
+.modal-content--large {
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .modal-content--large {
+    min-width: 90%;
+    max-width: 90%;
+  }
 }

@@ -69,7 +69,21 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
     }
   }
   
-  return res.json();
+  // Handle empty response (204 No Content or empty body)
+  if (res.status === 204 || res.headers.get('content-length') === '0') {
+    return undefined as T;
+  }
+  
+  const text = await res.text();
+  if (!text) {
+    return undefined as T;
+  }
+  
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text as unknown as T;
+  }
 }
 
 // Get all users

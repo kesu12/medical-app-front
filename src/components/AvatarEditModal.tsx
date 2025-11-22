@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import Modal from './Modal';
 import '../App.css';
+import { useLanguage } from '../contexts/LanguageContext';
 
 type AvatarEditModalProps = {
   open: boolean;
@@ -10,6 +11,7 @@ type AvatarEditModalProps = {
 };
 
 function AvatarEditModal({ open, onClose, onSave, currentAvatarUrl }: AvatarEditModalProps) {
+  const { t } = useLanguage();
   const [mode, setMode] = useState<'file' | 'url'>('file');
   const [url, setUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -147,20 +149,20 @@ function AvatarEditModal({ open, onClose, onSave, currentAvatarUrl }: AvatarEdit
   }
 
   return (
-    <Modal open={open} title="Change Avatar" onClose={handleClose}>
+    <Modal open={open} title={t('avatarEdit.changeAvatar')} onClose={handleClose}>
       <div className="avatar-edit">
         <div className="avatar-edit__tabs">
           <button
             className={`avatar-edit__tab ${mode === 'file' ? 'avatar-edit__tab--active' : ''}`}
             onClick={() => setMode('file')}
           >
-            Upload from Computer
+            {t('avatarEdit.uploadFromComputer')}
           </button>
           <button
             className={`avatar-edit__tab ${mode === 'url' ? 'avatar-edit__tab--active' : ''}`}
             onClick={() => setMode('url')}
           >
-            Enter URL
+            {t('avatarEdit.enterUrl')}
           </button>
         </div>
 
@@ -176,7 +178,7 @@ function AvatarEditModal({ open, onClose, onSave, currentAvatarUrl }: AvatarEdit
                 id="avatar-file-input"
               />
               <label htmlFor="avatar-file-input" className="btn btn--ghost avatar-edit__file-label">
-                Choose File
+                {t('avatarEdit.chooseFile')}
               </label>
               {file && (
                 <div className="avatar-edit__file-info">
@@ -194,7 +196,7 @@ function AvatarEditModal({ open, onClose, onSave, currentAvatarUrl }: AvatarEdit
                 className="form__input"
                 value={url}
                 onChange={handleUrlChange}
-                placeholder="https://example.com/image.jpg"
+                placeholder={t('avatarEdit.urlPlaceholder')}
               />
             </div>
           )}
@@ -209,7 +211,7 @@ function AvatarEditModal({ open, onClose, onSave, currentAvatarUrl }: AvatarEdit
 
           <div className="form__actions">
             <button type="button" className="btn btn--ghost" onClick={handleClose}>
-              Cancel
+              {t('modal.cancel')}
             </button>
             <button
               type="button"
@@ -217,7 +219,7 @@ function AvatarEditModal({ open, onClose, onSave, currentAvatarUrl }: AvatarEdit
               onClick={handleSave}
               disabled={!preview}
             >
-              Save
+              {t('modal.save')}
             </button>
           </div>
         </div>

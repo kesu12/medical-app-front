@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '../contexts/UserContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getNursePatients, NursePatient } from '../api/nurseCabinet';
 import { fetchNurseNotifications } from '../api/notifications';
 import { NotificationItem } from '../api/notifications';
 
 const NurseCabinet: React.FC = () => {
   const { user } = useUser();
+  const { t } = useLanguage();
   const [patients, setPatients] = useState<NursePatient[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +44,7 @@ const NurseCabinet: React.FC = () => {
   if (loading) {
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
-        <p>Loading...</p>
+        <p>{t('common.loading')}</p>
       </div>
     );
   }
@@ -50,7 +52,7 @@ const NurseCabinet: React.FC = () => {
   if (error) {
     return (
       <div style={{ padding: '20px', color: 'red' }}>
-        <p>Error: {error}</p>
+        <p>{t('common.error')}: {error}</p>
         <button onClick={loadData}>Retry</button>
       </div>
     );
@@ -58,12 +60,12 @@ const NurseCabinet: React.FC = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1>Nurse Cabinet</h1>
+      <h1>{t('nurseCabinet.title')}</h1>
       
       <section style={{ marginBottom: '30px' }}>
-        <h2>My Patients ({patients.length})</h2>
+        <h2>{t('nurseCabinet.myPatients')} ({patients.length})</h2>
         {patients.length === 0 ? (
-          <p>No patients assigned</p>
+          <p>{t('nurseCabinet.noPatients')}</p>
         ) : (
           <div style={{ display: 'grid', gap: '15px' }}>
             {patients.map((patient) => (
@@ -111,9 +113,9 @@ const NurseCabinet: React.FC = () => {
       </section>
 
       <section>
-        <h2>Notifications ({notifications.length})</h2>
+        <h2>{t('nurseCabinet.notifications')} ({notifications.length})</h2>
         {notifications.length === 0 ? (
-          <p>No notifications</p>
+          <p>{t('nurseCabinet.noNotifications')}</p>
         ) : (
           <div style={{ display: 'grid', gap: '10px' }}>
             {notifications.map((notification) => (
