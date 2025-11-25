@@ -57,7 +57,6 @@ function Header({ onOpenLogin, onOpenRegister }: HeaderProps) {
             {user.role === 'NURSE' && (
               <Link to="/nurse-cabinet" className="btn btn--ghost">{t('header.nurseCabinet')}</Link>
             )}
-            <Link to="/medical-indicators" className="btn btn--ghost">{t('header.indicators')}</Link>
         </nav>
         )}
       </div>

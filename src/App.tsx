@@ -10,7 +10,6 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Cabinet from './pages/Cabinet';
 import NurseCabinet from './pages/NurseCabinet';
-import MedicalIndicators from './pages/MedicalIndicators';
 import AuthModal from './components/AuthModal';
 import { UserProvider, useUser } from './contexts/UserContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -64,7 +63,7 @@ function AppInner() {
 
     // Редиректим неавторизованных пользователей с защищенных страниц
     if (!loading && !user) {
-      const protectedRoutes = ['/doctors', '/departments', '/admin-users', '/profile', '/settings', '/cabinet', '/nurse-cabinet', '/medical-indicators'];
+      const protectedRoutes = ['/doctors', '/departments', '/admin-users', '/profile', '/settings', '/cabinet', '/nurse-cabinet'];
       if (protectedRoutes.includes(location.pathname)) {
         navigate('/');
         return;
@@ -111,7 +110,6 @@ function AppInner() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/cabinet" element={<Cabinet />} />
         <Route path="/nurse-cabinet" element={<NurseCabinet />} />
-        <Route path="/medical-indicators" element={<MedicalIndicators />} />
       </Routes>
       {authType && !user && (
         <AuthModal open={!!authType} type={authType} onClose={handleCloseAuth} onSuccess={refreshUser} />
